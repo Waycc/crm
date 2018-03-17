@@ -1,0 +1,18 @@
+{% extends 'king_admin/index.html' %}
+{% load tags %}
+
+
+{% block container %}
+    <div style="margin:50px 0 0 60px">
+     {% display_obj_related delete_obj%}
+    </div>
+    <div style="margin-left: 50px">
+        <form method="post">{% csrf_token %}
+            <input type="hidden" name="confirm" value="yes">
+            <input type="hidden" name="action_select" value="{{ action }}">
+            <input type="hidden" name="selected_id_list" value="{{ selected_id_list }}">
+            <button type="submit" class="btn btn-danger">确定删除</button>
+            <a  class="btn btn-info" href="{% url 'table_objs' app_name table_name %}">取消</a>
+        </form>
+    </div>
+{% endblock %}

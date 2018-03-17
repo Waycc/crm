@@ -1,0 +1,125 @@
+{% extends 'king_admin/index.html' %}
+{% load tags %}
+
+{% block container %}
+
+    <div class="panel panel-info" style="margin: 50px">
+     <div><a href="/king_admin/">返回表列表</a></div>
+      <div class="panel-heading">
+        <h3 class="panel-title">{% table_name admin_class %}
+            <a href="{{ request.path }}add/" class="pull-right">add</a>
+        </h3>
+
+      </div>
+      <div class="panel-body">
+      <div class="row">
+            <form class="form-inline" method="get">
+                {% for filter_condition in admin_class.list_filter %}
+                    <div style="display: inline-block;margin-left: 20px">
+                    <span>{{ filter_condition }}</span>
+                    <select class="form-control" name="{{ filter_condition }}">
+                        {% return_option_ele filter_condition admin_class filter_dict%}
+                    </select>
+                    </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-success">检索</button>
+
+                <div style="margin: 8px 0 0 20px">
+                    <input class="form-control" type="text" name="search_key" value="{{ request.search_key }}">
+                    <button type="submit" class="btn btn-success">搜索</button>
+                </div>
+
+            </form>
+            <form method="post" id="action_form" onsubmit="AddInputEle(this)">{% csrf_token %}
+                <select name='action_select' class="form-control" style="width: 200px;display: inline-block;margin: 8px 0 0 20px">
+                    <option value="">---------</option>
+                    {% for action in admin_class.action %}
+                    <option value="{{ action }}">{{ action }}</option>.
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn" >Go</button>
+            </form>
+      </div>
+
+
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th style="width: 50px"><input type="checkbox" onclick="SelectCheckBox(this)"></th>
+                {% for field in admin_class.list_display %}
+                <th>
+                    {% get_order_field_ele field order_field filter_dict admin_class%}
+                </th>
+
+                {% endfor %}
+            </tr>
+            </thead>
+{#            <!--{% return_model_obj admin_class as objs %}-->#}
+            <tbody>
+                {% for obj in query_set  %}
+                <tr>
+
+                    <td><input tag='obj_checkbox' type="checkbox" value="{{ obj.id }}"></td>
+                    {% field_data request obj admin_class %}
+                </tr>
+                {% endfor %}
+                <tr>
+                    <td></td>
+                    <td style="width: 70px">
+                    共{{ query_set.paginator.count }}条
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+
+
+
+      <ul class="pagination">
+          {% if query_set.has_previous %}
+            <li class=""><a href="?page=1&{% return_filter_condition filter_dict %}o={{ request.o }}&search_key={{ request.search_key }}">首页</a></li>
+            <li class=""><a href="?page={{ query_set.previous_page_number }}&{% return_filter_condition filter_dict %}o={{ request.o }}&search_key={{ request.search_key }}">上一页</a></li>
+          {% endif %}
+          {% return_page_ele query_set filter_dict request %}
+          {% if query_set.has_next %}
+            <li class=""><a href="?page={{ query_set.next_page_number }}&{% return_filter_condition filter_dict %}o={{ request.o }}&search_key={{ request.search_key }}">下一页</a></li>
+             <li class=""><a href="?page={{ query_set.paginator.num_pages }}&{% return_filter_condition filter_dict %}o={{ request.o }}&search_key={{ request.search_key }}">尾页</a></li>
+          {% endif %}
+          <div style="display: inline-block;margin: 8px 0 0 10px;">共{{ query_set.paginator.num_pages }}页</div>
+
+      </ul>
+
+
+      </div>
+    </div>
+    <script>
+        function SelectCheckBox(ths){
+            if($(ths).prop('checked')){
+                $('input[tag=obj_checkbox]').prop('checked',true)
+            }else {
+                $('input[tag=obj_checkbox]').prop('checked',false)
+            }
+        }
+        function AddInputEle(ths) {
+
+            var select_id_list = [];
+             $('input[tag=obj_checkbox]').each(function () {
+                 if($(this).prop('checked')){
+                     select_id_list.push($(this).val())
+                 }
+            });
+             if(!$('select[name=action_select]').val()){
+                 alert('没有选择动作');
+                 return
+             }
+             if(select_id_list.length == 0){
+                 alert('请选择数据');
+                 return
+             }
+            var input = document.createElement('input');
+            $(input).attr({'value':select_id_list,'type':'hidden','name':'selected_id_list'});
+            $(input).appendTo($('#action_form'))
+        }
+    </script>
+
+{% endblock %}
